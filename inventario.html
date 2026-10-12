@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventario de productos</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 15px;
+  background: #f2f4f7;
+  color: #222;
+}
+
+h1 {
+  text-align: center;
+  font-size: 24px;
+}
+
+.panel {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 7px;
+}
+
+select, input {
+  font-size: 16px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  width: 100%;
+  background: white;
+}
+
+.fecha { margin-top: 15px; }
+
+.tabla-contenedor {
+  overflow-x: auto;
+  background: white;
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 330px;
+}
+
+th {
+  background: #2457a7;
+  color: white;
+  padding: 10px 5px;
+  font-size: 13px;
+}
+
+td {
+  padding: 6px;
+  border-bottom: 1px solid #ddd;
+}
+
+td input {
+  padding: 9px 5px;
+  min-width: 0;
+}
+
+.nombre { min-width: 125px; }
+
+.cantidad {
+  width: 65px;
+  text-align: center;
+}
+
+.total {
+  text-align: center;
+  font-weight: bold;
+  background: #eef4ff;
+  min-width: 48px;
+}
+
+.botones {
+  margin-top: 15px;
+}
+
+button {
+  width: 100%;
+  border: none;
+  border-radius: 9px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  background: #2457a7;
+}
+
+.ayuda {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+}
+
+@media print {
+  body {
+    background: white;
+    padding: 0;
+  }
+
+  .no-imprimir {
+    display: none !important;
+  }
+
+  h1 { font-size: 20px; }
+
+  .panel {
+    padding: 5px;
+    margin-bottom: 5px;
+  }
+
+  .tabla-contenedor { overflow: visible; }
+
+  table { min-width: 0; }
+
+  th, td {
+    padding: 5px 3px;
+    font-size: 11px;
+  }
+
+  input {
+    border: none;
+    padding: 2px;
+    font-size: 11px;
+    color: black;
+    appearance: none;
+  }
+
+  .nombre { min-width: 0; }
+
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Inventario de productos</h1>
+
+<div class="panel no-imprimir">
+  <label for="proveedor">Seleccionar proveedor</label>
+  <select id="proveedor" onchange="cambiarProveedor()">
+    <option value="0">Proveedor 1</option>
+    <option value="1">Proveedor 2</option>
+    <option value="2">Proveedor 3</option>
+    <option value="3">Proveedor 4</option>
+    <option value="4">Proveedor 5</option>
+  </select>
+
+  <div class="fecha">
+    <label for="fecha">Fecha del inventario</label>
+    <input type="date" id="fecha">
+  </div>
+</div>
+
+<div class="panel">
+  <strong id="tituloProveedor">Proveedor 1</strong>
+  <p class="ayuda no-imprimir">
+    Puedes cambiar los nombres de los productos.
+    Introduce las dos cantidades y la suma se calculará sola.
+  </p>
+</div>
+
+<div class="tabla-contenedor">
+  <table>
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Cant. 1</th>
+        <th>Cant. 2</th>
+        <th>Suma</th>
+      </tr>
+    </thead>
+    <tbody id="productos"></tbody>
+  </table>
+</div>
+
+<div class="botones no-imprimir">
+  <button onclick="imprimirPDF()">
+    Imprimir / Guardar PDF
+  </button>
+</div>
+
+<p class="ayuda no-imprimir">
+  Los datos no se guardan permanentemente.
+  Si cierras o recargas la página, se perderán.
+  Guarda el PDF antes de salir si quieres conservar el inventario.
+</p>
+
+<script>
+const numeroProveedores = 5;
+const numeroProductos = 20;
+let proveedorActual = 0;
+
+const datos = Array.from(
+  { length: numeroProveedores },
+  () => Array.from(
+    { length: numeroProductos },
+    (_, i) => ({
+      nombre: "Producto " + (i + 1),
+      cantidad1: "",
+      cantidad2: ""
+    })
+  )
+);
+
+function prepararFecha() {
+  const hoy = new Date();
+  const anio = hoy.getFullYear();
+  const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoy.getDate()).padStart(2, "0");
+
+  document.getElementById("fecha").value =
+    anio + "-" + mes + "-" + dia;
+}
+
+function cambiarProveedor() {
+  guardarDatosVisibles();
+
+  proveedorActual = Number(
+    document.getElementById("proveedor").value
+  );
+
+  document.getElementById("tituloProveedor").textContent =
+    "Proveedor " + (proveedorActual + 1);
+
+  mostrarProductos();
+}
+
+function guardarDatosVisibles() {
+  const filas = document.querySelectorAll("#productos tr");
+
+  filas.forEach((fila, i) => {
+    const campos = fila.querySelectorAll("input");
+
+    datos[proveedorActual][i].nombre = campos[0].value;
+    datos[proveedorActual][i].cantidad1 = campos[1].value;
+    datos[proveedorActual][i].cantidad2 = campos[2].value;
+  });
+}
+
+function mostrarProductos() {
+  const cuerpo = document.getElementById("productos");
+  cuerpo.innerHTML = "";
+
+  datos[proveedorActual].forEach((producto, i) => {
+    const fila = document.createElement("tr");
+
+    const tdNombre = document.createElement("td");
+    const nombre = document.createElement("input");
+    nombre.type = "text";
+    nombre.className = "nombre";
+    nombre.value = producto.nombre;
+    nombre.setAttribute("aria-label", "Nombre del producto " + (i + 1));
+
+    nombre.oninput = () => {
+      datos[proveedorActual][i].nombre = nombre.value;
+    };
+
+    tdNombre.appendChild(nombre);
+
+    const tdCant1 = document.createElement("td");
+    tdCant1.appendChild(crearCantidad(producto.cantidad1, i, 1));
+
+    const tdCant2 = document.createElement("td");
+    tdCant2.appendChild(crearCantidad(producto.cantidad2, i, 2));
+
+    const tdTotal = document.createElement("td");
+    tdTotal.className = "total";
+    tdTotal.textContent =
+      calcularTotal(producto.cantidad1, producto.cantidad2);
+
+    fila.append(tdNombre, tdCant1, tdCant2, tdTotal);
+    cuerpo.appendChild(fila);
+  });
+}
+
+function crearCantidad(valor, indice, numeroCampo) {
+  const input = document.createElement("input");
+
+  input.type = "number";
+  input.inputMode = "decimal";
+  input.min = "0";
+  input.step = "any";
+  input.className = "cantidad";
+  input.value = valor;
+
+  input.setAttribute(
+    "aria-label",
+    "Cantidad " + numeroCampo + ", producto " + (indice + 1)
+  );
+
+  input.oninput = () => {
+    const producto = datos[proveedorActual][indice];
+
+    if (numeroCampo === 1) {
+      producto.cantidad1 = input.value;
+    } else {
+      producto.cantidad2 = input.value;
+    }
+
+    const fila = input.closest("tr");
+    const campos = fila.querySelectorAll("input");
+
+    fila.querySelector(".total").textContent =
+      calcularTotal(campos[1].value, campos[2].value);
+  };
+
+  return input;
+}
+
+function calcularTotal(a, b) {
+  return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+}
+
+function imprimirPDF() {
+  guardarDatosVisibles();
+
+  const fecha = document.getElementById("fecha").value;
+  document.title = "Inventario Proveedor " +
+    (proveedorActual + 1) + (fecha ? " - " + fecha : "");
+
+  window.print();
+}
+
+prepararFecha();
+mostrarProductos();
+</script>
+
+</body>
+</html>
