@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,7 +7,9 @@
 <title>Inventario de productos</title>
 
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   font-family: Arial, sans-serif;
@@ -43,7 +46,9 @@ select, input {
   background: white;
 }
 
-.fecha { margin-top: 15px; }
+.fecha {
+  margin-top: 15px;
+}
 
 .tabla-contenedor {
   overflow-x: auto;
@@ -54,7 +59,8 @@ select, input {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 330px;
+  min-width: 500px;
+  table-layout: auto;
 }
 
 th {
@@ -67,17 +73,33 @@ th {
 td {
   padding: 6px;
   border-bottom: 1px solid #ddd;
+  vertical-align: middle;
 }
 
-td input {
-  padding: 9px 5px;
-  min-width: 0;
+td:first-child {
+  width: 55%;
 }
 
-.nombre { min-width: 125px; }
+.nombre {
+  display: block;
+  width: 100%;
+  min-width: 220px;
+  padding: 8px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  background: white;
+  resize: vertical;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  overflow: hidden;
+}
 
 .cantidad {
   width: 65px;
+  min-width: 55px;
   text-align: center;
 }
 
@@ -85,7 +107,8 @@ td input {
   text-align: center;
   font-weight: bold;
   background: #eef4ff;
-  min-width: 48px;
+  min-width: 55px;
+  white-space: nowrap;
 }
 
 .botones {
@@ -120,35 +143,76 @@ button {
     display: none !important;
   }
 
-  h1 { font-size: 20px; }
+  h1 {
+    font-size: 20px;
+  }
 
   .panel {
     padding: 5px;
     margin-bottom: 5px;
   }
 
-  .tabla-contenedor { overflow: visible; }
-
-  table { min-width: 0; }
-
-  th, td {
-    padding: 5px 3px;
-    font-size: 11px;
+  .tabla-contenedor {
+    overflow: visible;
   }
 
-  input {
+  table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  th, td {
+    padding: 4px 3px;
+    font-size: 10px;
+  }
+
+  th:first-child,
+  td:first-child {
+    width: 55%;
+  }
+
+  .nombre {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    resize: none;
+    overflow: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    border: none;
+    border-radius: 0;
+    padding: 2px;
+    font-size: 10px;
+    line-height: 1.3;
+    color: black;
+    background: transparent;
+  }
+
+  .cantidad {
+    width: 100%;
+    min-width: 0;
     border: none;
     padding: 2px;
-    font-size: 11px;
+    font-size: 10px;
     color: black;
     appearance: none;
   }
 
-  .nombre { min-width: 0; }
+  .total {
+    min-width: 0;
+    background: white;
+  }
+
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 
   @page {
     size: A4 portrait;
-    margin: 10mm;
+    margin: 8mm;
   }
 }
 </style>
@@ -178,8 +242,9 @@ button {
 <div class="panel">
   <strong id="tituloProveedor">Cash Patri</strong>
   <p class="ayuda no-imprimir">
-    Puedes cambiar los nombres de los productos.
-    Introduce las dos cantidades y la suma se calculará automáticamente.
+    Los nombres completos se muestran en varias líneas.
+    Puedes editarlos. Introduce las dos cantidades y
+    la suma se calculará automáticamente.
   </p>
 </div>
 
@@ -187,7 +252,7 @@ button {
   <table>
     <thead>
       <tr>
-        <th>Producto</th>
+        <th style="width:55%">Producto</th>
         <th>Cant. 1</th>
         <th>Cant. 2</th>
         <th>Suma</th>
@@ -204,9 +269,8 @@ button {
 </div>
 
 <p class="ayuda no-imprimir">
-  Los datos no se guardan permanentemente.
-  Si cierras o recargas la página, se perderán.
-  Guarda el PDF antes de salir si quieres conservar el inventario.
+  Los datos se conservan mientras la página esté abierta.
+  Guarda el PDF para conservar el inventario.
 </p>
 
 <script>
@@ -219,12 +283,11 @@ const proveedores = [
 ];
 
 const nombresProductos = [
-  // CASH PATRI
   [
     "Galletas Krit",
-    "Velarte rosquilletas cacahuete",
-    "Velarte rosquilletas queso",
-    "Velarte rosquilletas pipas",
+    "Velarte rosquilletas: cacahuete",
+    "Velarte rosquilletas: queso",
+    "Velarte rosquilletas: pipas",
     "Pica Tostes Alteza",
     "Remolacha rallada en bote Pelli",
     "Zanahoria rallada en bote Pelli",
@@ -233,8 +296,6 @@ const nombresProductos = [
     "Espinaca en bote Alteza",
     "Champiñones en bote Celorrio"
   ],
-
-  // GOYA
   [
     "Choclo entero grande Goya",
     "Choclo desgranado Goya",
@@ -245,8 +306,6 @@ const nombresProductos = [
     "Almidón de yuca agria Goya",
     "Almidón de yuca dulce Goya"
   ],
-
-  // ZUMOS
   [
     "Enjoy tropical 1,5 l",
     "Enjoy naranja 1,5 l",
@@ -255,8 +314,6 @@ const nombresProductos = [
     "Up Grade azul 500 ml",
     "Up Grade rojo 500 ml"
   ],
-
-  // AGUAS
   [
     "Agua La Serreta 1,5 l x 6 (pack)",
     "Agua La Serreta garrafa 5 l",
@@ -265,11 +322,9 @@ const nombresProductos = [
     "Agua Fuente Primavera con gas 500 ml",
     "Agua Fuente Primavida 500 ml"
   ],
-
-  // REFRESCOS
   [
     "Coca-Cola normal 1,25 l",
-    "Coca-Cola Zero 1,25 l",
+    "Coca-Cola 0 1,25 l",
     "Fanta naranja 1,25 l",
     "Fanta limón 1,25 l"
   ]
@@ -277,7 +332,6 @@ const nombresProductos = [
 
 let proveedorActual = 0;
 
-// Cada proveedor tiene sus propios productos y cantidades.
 const datos = nombresProductos.map(lista =>
   lista.map(nombre => ({
     nombre: nombre,
@@ -313,7 +367,7 @@ function guardarDatosVisibles() {
   const filas = document.querySelectorAll("#productos tr");
 
   filas.forEach((fila, i) => {
-    const campos = fila.querySelectorAll("input");
+    const campos = fila.querySelectorAll("textarea, input");
     const producto = datos[proveedorActual][i];
 
     if (!producto || campos.length < 3) return;
@@ -324,6 +378,11 @@ function guardarDatosVisibles() {
   });
 }
 
+function ajustarAltura(textarea) {
+  textarea.style.height = "auto";
+  textarea.style.height = textarea.scrollHeight + "px";
+}
+
 function mostrarProductos() {
   const cuerpo = document.getElementById("productos");
   cuerpo.innerHTML = "";
@@ -332,20 +391,20 @@ function mostrarProductos() {
     const fila = document.createElement("tr");
 
     const tdNombre = document.createElement("td");
-    const nombre = document.createElement("input");
+    const nombre = document.createElement("textarea");
 
-    nombre.type = "text";
     nombre.className = "nombre";
+    nombre.rows = 1;
     nombre.value = producto.nombre;
-
     nombre.setAttribute(
       "aria-label",
       "Nombre del producto " + (i + 1)
     );
 
-    nombre.oninput = () => {
+    nombre.addEventListener("input", () => {
       datos[proveedorActual][i].nombre = nombre.value;
-    };
+      ajustarAltura(nombre);
+    });
 
     tdNombre.appendChild(nombre);
 
@@ -368,6 +427,8 @@ function mostrarProductos() {
 
     fila.append(tdNombre, tdCant1, tdCant2, tdTotal);
     cuerpo.appendChild(fila);
+
+    ajustarAltura(nombre);
   });
 }
 
@@ -387,7 +448,7 @@ function crearCantidad(valor, indice, numeroCampo) {
     ", producto " + (indice + 1)
   );
 
-  input.oninput = () => {
+  input.addEventListener("input", () => {
     const producto = datos[proveedorActual][indice];
 
     if (numeroCampo === 1) {
@@ -400,8 +461,8 @@ function crearCantidad(valor, indice, numeroCampo) {
     const campos = fila.querySelectorAll("input");
 
     fila.querySelector(".total").textContent =
-      calcularTotal(campos[1].value, campos[2].value);
-  };
+      calcularTotal(campos[0].value, campos[1].value);
+  });
 
   return input;
 }
@@ -412,6 +473,9 @@ function calcularTotal(a, b) {
 
 function imprimirPDF() {
   guardarDatosVisibles();
+
+  // Ajustar la altura de los nombres antes de imprimir.
+  document.querySelectorAll(".nombre").forEach(ajustarAltura);
 
   const fecha = document.getElementById("fecha").value;
 
